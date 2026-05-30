@@ -1,28 +1,14 @@
-# WeDeen Backend
+# Private Property Notice
 
-Production-ready Express + MongoDB API for WeDeen.
+This `backend` codebase is private and proprietary property of the WeDeen project owner.
 
-## Setup
+## Restrictions
+- No unauthorized copying, sharing, publishing, or redistribution.
+- No commercial or public reuse without written permission.
+- No reverse engineering, resale, or sublicensing.
 
-1. Copy `.env.example` to `.env`
-2. Fill env values
-3. Install and run:
+## Access
+Use is limited to explicitly authorized collaborators only.
 
-```bash
-npm install
-npm run dev
-```
-
-## Endpoints
-
-### Auth
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-
-### Memorization
-- `GET /api/memorization`
-- `POST /api/memorization/mark`
-- `PUT /api/memorization/update`
-- `DELETE /api/memorization/:id`
-- `GET /api/memorization/stats`
+## Contact
+For permission requests, contact the project owner/maintainer.
