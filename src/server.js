@@ -28,6 +28,7 @@ app.use(
   })
 );
 
+app.get('/', (_req, res) => res.send('SERVER IS RUNNING!'));
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/memorization', memorizationRoutes);
