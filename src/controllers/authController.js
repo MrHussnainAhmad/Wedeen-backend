@@ -16,6 +16,15 @@ function publicUser(user) {
   };
 }
 
+async function sendEmailSafe(payload, context) {
+  try {
+    await sendEmail(payload);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    console.error(`[mail:${context}] ${reason}`);
+  }
+}
+
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -32,11 +41,11 @@ export const register = asyncHandler(async (req, res) => {
 
   const token = signToken({ id: user._id.toString() });
 
-  await sendEmail({
+  await sendEmailSafe({
     to: user.email,
     subject: 'Welcome to WeDeen',
     text: `Assalamualaikum ${user.name}, your WeDeen account has been created successfully.`
-  }).catch(() => undefined);
+  }, 'register');
 
   res.status(201).json({
     token,
@@ -77,11 +86,11 @@ export const updatePassword = asyncHandler(async (req, res) => {
   user.password = await bcrypt.hash(newPassword, 12);
   await user.save();
 
-  await sendEmail({
+  await sendEmailSafe({
     to: user.email,
     subject: 'WeDeen password updated',
     text: 'Your WeDeen password was updated successfully.'
-  }).catch(() => undefined);
+  }, 'updatePassword');
 
   res.json({ success: true });
 });
@@ -94,11 +103,11 @@ export const deleteAccount = asyncHandler(async (req, res) => {
   await Memorization.deleteMany({ userId: user._id });
   await User.deleteOne({ _id: user._id });
 
-  await sendEmail({
+  await sendEmailSafe({
     to: email,
     subject: 'WeDeen account deleted',
     text: 'Your WeDeen account has been deleted.'
-  }).catch(() => undefined);
+  }, 'deleteAccount');
 
   res.json({ success: true });
 });
@@ -114,11 +123,11 @@ export const forgotPassword = asyncHandler(async (req, res) => {
   const appUrl = process.env.APP_RESET_PASSWORD_URL || 'wedeen://reset-password';
   const link = `${appUrl}${appUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`;
 
-  await sendEmail({
+  await sendEmailSafe({
     to: user.email,
     subject: 'Reset your WeDeen password',
     text: `Use this link to reset your WeDeen password:\n${link}\n\nThis link expires in 30 minutes.`
-  }).catch(() => undefined);
+  }, 'forgotPassword');
 
   return res.json({ success: true, message: 'If this email exists, a reset link has been sent.' });
 });
@@ -139,11 +148,11 @@ export const resetPassword = asyncHandler(async (req, res) => {
   user.password = await bcrypt.hash(newPassword, 12);
   await user.save();
 
-  await sendEmail({
+  await sendEmailSafe({
     to: user.email,
     subject: 'WeDeen password reset successful',
     text: 'Your WeDeen password has been reset successfully.'
-  }).catch(() => undefined);
+  }, 'resetPassword');
 
   res.json({ success: true });
 });
