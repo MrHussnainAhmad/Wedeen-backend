@@ -8,6 +8,7 @@ import { connectDB } from './config/db.js';
 import { env } from './config/env.js';
 import authRoutes from './routes/authRoutes.js';
 import memorizationRoutes from './routes/memorizationRoutes.js';
+import complianceRoutes from './routes/complianceRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -32,6 +33,7 @@ app.get('/', (_req, res) => res.send('SERVER IS RUNNING!'));
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/memorization', memorizationRoutes);
+app.use('/api/compliance', complianceRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });
