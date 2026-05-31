@@ -41,14 +41,18 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
-async function bootstrap() {
+export async function bootstrap() {
   await connectDB();
   app.listen(env.port, () => {
     console.log(`Backend running on http://localhost:${env.port}`);
   });
 }
 
-bootstrap().catch((error) => {
-  console.error('Failed to start server', error);
-  process.exit(1);
-});
+if (process.env.VERCEL !== '1') {
+  bootstrap().catch((error) => {
+    console.error('Failed to start server', error);
+    process.exit(1);
+  });
+}
+
+export default app;
