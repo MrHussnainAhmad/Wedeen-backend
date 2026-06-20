@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "sync-indexes": "node src/scripts/syncIndexes.js",
     "lint": "echo \"Add ESLint if needed\""
   },
   "dependencies": {

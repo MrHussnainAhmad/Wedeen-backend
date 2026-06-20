@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { Memorization } from '../models/Memorization.js';
 import { User } from '../models/User.js';
+import { env } from '../config/env.js';
 import { sendEmail } from '../services/mailService.js';
 import { signPasswordResetToken, signToken, verifyPasswordResetToken } from '../services/tokenService.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -31,7 +32,7 @@ export const register = asyncHandler(async (req, res) => {
   const existing = await User.findOne({ email: email.toLowerCase() }).lean();
   if (existing) throw badRequest('Email already in use');
 
-  const hashed = await bcrypt.hash(password, 12);
+  const hashed = await bcrypt.hash(password, env.bcryptRounds);
   const user = await User.create({
     name: name.trim(),
     email: email.toLowerCase(),
@@ -83,7 +84,7 @@ export const updatePassword = asyncHandler(async (req, res) => {
   const match = await bcrypt.compare(currentPassword, user.password);
   if (!match) throw unauthorized('Current password is incorrect');
 
-  user.password = await bcrypt.hash(newPassword, 12);
+  user.password = await bcrypt.hash(newPassword, env.bcryptRounds);
   await user.save();
 
   await sendEmailSafe({
@@ -145,7 +146,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const user = await User.findById(decoded.id);
   if (!user || user.email !== decoded.email) throw badRequest('Invalid reset token');
 
-  user.password = await bcrypt.hash(newPassword, 12);
+  user.password = await bcrypt.hash(newPassword, env.bcryptRounds);
   await user.save();
 
   await sendEmailSafe({

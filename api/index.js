@@ -1,8 +1,6 @@
 import { connectDB } from '../src/config/db.js';
 import app from '../src/server.js';
 
-let dbReadyPromise;
-
 export default async function handler(req, res) {
   // Restore original API pathname passed by Vercel rewrite so Express can match routes.
   const url = new URL(req.url, 'http://localhost');
@@ -13,13 +11,14 @@ export default async function handler(req, res) {
     req.url = search ? `${rewrittenPathname}?${search}` : rewrittenPathname;
   }
 
-  if (!dbReadyPromise) {
-    dbReadyPromise = connectDB().catch((error) => {
-      dbReadyPromise = null;
-      throw error;
-    });
+  // connectDB caches the connection across warm invocations (see config/db.js),
+  // so this is a no-op once the pool is established.
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error('[api] database unavailable', error?.message ?? error);
+    return res.status(503).json({ message: 'Service temporarily unavailable' });
   }
 
-  await dbReadyPromise;
   return app(req, res);
 }
