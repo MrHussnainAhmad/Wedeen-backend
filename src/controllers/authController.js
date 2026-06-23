@@ -29,13 +29,14 @@ async function sendEmailSafe(payload, context) {
 export const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  const existing = await User.findOne({ email: email.toLowerCase() }).lean();
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = await User.findOne({ email: normalizedEmail }).lean();
   if (existing) throw badRequest('Email already in use');
 
   const hashed = await bcrypt.hash(password, env.bcryptRounds);
   const user = await User.create({
     name: name.trim(),
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     password: hashed,
     unlockedSurah: 1
   });
@@ -56,7 +57,7 @@ export const register = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
 
   if (!user) throw unauthorized('Invalid credentials');
   const match = await bcrypt.compare(password, user.password);
@@ -71,9 +72,9 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const me = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user.id).select('-password').lean();
+  const user = await User.findById(req.user.id).select('-password -passwordResetVersion');
   if (!user) throw unauthorized('User not found');
-  res.json({ user });
+  res.json({ user: publicUser(user) });
 });
 
 export const updatePassword = asyncHandler(async (req, res) => {
@@ -85,6 +86,7 @@ export const updatePassword = asyncHandler(async (req, res) => {
   if (!match) throw unauthorized('Current password is incorrect');
 
   user.password = await bcrypt.hash(newPassword, env.bcryptRounds);
+  user.passwordResetVersion = (user.passwordResetVersion ?? 0) + 1;
   await user.save();
 
   await sendEmailSafe({
@@ -115,12 +117,16 @@ export const deleteAccount = asyncHandler(async (req, res) => {
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.trim().toLowerCase() });
   if (!user) {
     return res.json({ success: true, message: 'If this email exists, a reset link has been sent.' });
   }
 
-  const token = signPasswordResetToken({ id: user._id.toString(), email: user.email });
+  const token = signPasswordResetToken({
+    id: user._id.toString(),
+    email: user.email,
+    passwordResetVersion: user.passwordResetVersion ?? 0
+  });
   const appUrl = process.env.APP_RESET_PASSWORD_URL || 'wedeen://reset-password';
   const link = `${appUrl}${appUrl.includes('?') ? '&' : '?'}token=${encodeURIComponent(token)}`;
 
@@ -143,11 +149,28 @@ export const resetPassword = asyncHandler(async (req, res) => {
     throw badRequest('Invalid or expired reset token');
   }
 
-  const user = await User.findById(decoded.id);
-  if (!user || user.email !== decoded.email) throw badRequest('Invalid reset token');
+  if (!Number.isInteger(decoded.passwordResetVersion)) {
+    throw badRequest('Invalid reset token');
+  }
 
-  user.password = await bcrypt.hash(newPassword, env.bcryptRounds);
-  await user.save();
+  const hashedPassword = await bcrypt.hash(newPassword, env.bcryptRounds);
+  const resetVersionCondition =
+    decoded.passwordResetVersion === 0
+      ? { $or: [{ passwordResetVersion: 0 }, { passwordResetVersion: { $exists: false } }] }
+      : { passwordResetVersion: decoded.passwordResetVersion };
+  const user = await User.findOneAndUpdate(
+    {
+      _id: decoded.id,
+      email: decoded.email,
+      ...resetVersionCondition
+    },
+    {
+      $set: { password: hashedPassword },
+      $inc: { passwordResetVersion: 1 }
+    },
+    { new: true }
+  );
+  if (!user) throw badRequest('Invalid or already used reset token');
 
   await sendEmailSafe({
     to: user.email,

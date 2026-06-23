@@ -2,6 +2,7 @@ import { Memorization } from '../models/Memorization.js';
 import { User } from '../models/User.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { badRequest, notFound } from '../utils/errors.js';
+import { getSurahAyahCount, TOTAL_QURAN_AYAHS } from '../constants/quran.js';
 
 function startOfDay(date) {
   const d = new Date(date);
@@ -88,14 +89,17 @@ export const deleteMemorization = asyncHandler(async (req, res) => {
 });
 
 export const getMemorizationStats = asyncHandler(async (req, res) => {
-  const items = await Memorization.find({ userId: req.user.id, memorized: true })
-    .select('surahNumber lastReviewed')
+  const storedItems = await Memorization.find({ userId: req.user.id, memorized: true })
+    .select('surahNumber ayahNumber lastReviewed')
     .lean();
+  const items = storedItems.filter(
+    (item) => item.ayahNumber >= 1 && item.ayahNumber <= getSurahAyahCount(item.surahNumber)
+  );
 
   const totalMemorizedAyahs = items.length;
   const uniqueSurahs = new Set(items.map((x) => x.surahNumber));
   const totalSurahsStarted = uniqueSurahs.size;
-  const completionPercentage = Number(((totalMemorizedAyahs / 6236) * 100).toFixed(2));
+  const completionPercentage = Number(((totalMemorizedAyahs / TOTAL_QURAN_AYAHS) * 100).toFixed(2));
 
   const reviewedDays = [...new Set(
     items
@@ -136,6 +140,16 @@ export const unlockNextSurah = asyncHandler(async (req, res) => {
   }
 
   if (surahNumber === unlockedSurah && unlockedSurah < 114) {
+    const expectedAyahs = getSurahAyahCount(surahNumber);
+    const memorizedAyahs = await Memorization.countDocuments({
+      userId: req.user.id,
+      surahNumber,
+      memorized: true,
+      ayahNumber: { $gte: 1, $lte: expectedAyahs }
+    });
+    if (memorizedAyahs !== expectedAyahs) {
+      throw badRequest(`Memorize all ${expectedAyahs} ayahs before unlocking the next Surah`);
+    }
     user.unlockedSurah = unlockedSurah + 1;
     await user.save();
   }

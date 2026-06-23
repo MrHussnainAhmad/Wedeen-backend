@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
       index: true
     },
     password: { type: String, required: true },
+    passwordResetVersion: { type: Number, default: 0, min: 0 },
     unlockedSurah: { type: Number, default: 1, min: 1, max: 114 }
   },
   { timestamps: { createdAt: true, updatedAt: false } }
