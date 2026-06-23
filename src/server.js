@@ -9,6 +9,7 @@ import { env } from './config/env.js';
 import authRoutes from './routes/authRoutes.js';
 import memorizationRoutes from './routes/memorizationRoutes.js';
 import complianceRoutes from './routes/complianceRoutes.js';
+import syncRoutes from './routes/syncRoutes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/auth/reset-password', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/memorization', memorizationRoutes);
 app.use('/api/compliance', complianceRoutes);
+app.use('/api/sync', syncRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ message: 'Route not found' });

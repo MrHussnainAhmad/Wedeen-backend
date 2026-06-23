@@ -1,6 +1,14 @@
 import crypto from 'crypto';
+import { Achievement } from '../models/Achievement.js';
+import { DuaProgress } from '../models/DuaProgress.js';
+import { FastingLog } from '../models/FastingLog.js';
+import { Favorite } from '../models/Favorite.js';
 import { Memorization } from '../models/Memorization.js';
+import { PlaceFavorite } from '../models/PlaceFavorite.js';
+import { SalahLog } from '../models/SalahLog.js';
+import { Tasbih } from '../models/Tasbih.js';
 import { User } from '../models/User.js';
+import { ZakatCalculation } from '../models/ZakatCalculation.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { env } from '../config/env.js';
 
@@ -52,7 +60,17 @@ export const deleteAccountCompliance = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: normalizedEmail }).select('_id').lean();
 
   if (user?._id) {
-    await Memorization.deleteMany({ userId: user._id });
+    await Promise.all([
+      Memorization.deleteMany({ userId: user._id }),
+      SalahLog.deleteMany({ userId: user._id }),
+      Tasbih.deleteMany({ userId: user._id }),
+      Achievement.deleteMany({ userId: user._id }),
+      Favorite.deleteMany({ userId: user._id }),
+      ZakatCalculation.deleteMany({ userId: user._id }),
+      FastingLog.deleteMany({ userId: user._id }),
+      PlaceFavorite.deleteMany({ userId: user._id }),
+      DuaProgress.deleteMany({ userId: user._id }),
+    ]);
     await User.deleteOne({ _id: user._id });
   }
 
