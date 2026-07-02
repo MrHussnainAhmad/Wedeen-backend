@@ -5,6 +5,7 @@ import { FastingLog } from '../models/FastingLog.js';
 import { Favorite } from '../models/Favorite.js';
 import { Memorization } from '../models/Memorization.js';
 import { PlaceFavorite } from '../models/PlaceFavorite.js';
+import { Reflection } from '../models/Reflection.js';
 import { SalahLog } from '../models/SalahLog.js';
 import { Tasbih } from '../models/Tasbih.js';
 import { User } from '../models/User.js';
@@ -53,8 +54,8 @@ export const register = asyncHandler(async (req, res) => {
 
   await sendEmailSafe({
     to: user.email,
-    subject: 'Welcome to WeDeen',
-    text: `Assalamualaikum ${user.name}, your WeDeen account has been created successfully.`
+    subject: 'Welcome to Muslim Deen: Quran & Prayer',
+    text: `Assalamualaikum ${user.name}, your Muslim Deen: Quran & Prayer account has been created successfully.`
   }, 'register');
 
   res.status(201).json({
@@ -99,8 +100,8 @@ export const updatePassword = asyncHandler(async (req, res) => {
 
   await sendEmailSafe({
     to: user.email,
-    subject: 'WeDeen password updated',
-    text: 'Your WeDeen password was updated successfully.'
+    subject: 'Muslim Deen: Quran & Prayer password updated',
+    text: 'Your Muslim Deen: Quran & Prayer password was updated successfully.'
   }, 'updatePassword');
 
   res.json({ success: true });
@@ -121,13 +122,14 @@ export const deleteAccount = asyncHandler(async (req, res) => {
     FastingLog.deleteMany({ userId: user._id }),
     PlaceFavorite.deleteMany({ userId: user._id }),
     DuaProgress.deleteMany({ userId: user._id }),
+    Reflection.deleteMany({ userId: user._id }),
   ]);
   await User.deleteOne({ _id: user._id });
 
   await sendEmailSafe({
     to: email,
-    subject: 'WeDeen account deleted',
-    text: 'Your WeDeen account has been deleted.'
+    subject: 'Muslim Deen: Quran & Prayer account deleted',
+    text: 'Your Muslim Deen: Quran & Prayer account has been deleted.'
   }, 'deleteAccount');
 
   res.json({ success: true });
@@ -150,8 +152,8 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   await sendEmailSafe({
     to: user.email,
-    subject: 'Reset your WeDeen password',
-    text: `Use this link to reset your WeDeen password:\n${link}\n\nThis link expires in 30 minutes.`
+    subject: 'Reset your Muslim Deen: Quran & Prayer password',
+    text: `Use this link to reset your Muslim Deen: Quran & Prayer password:\n${link}\n\nThis link expires in 30 minutes.`
   }, 'forgotPassword');
 
   return res.json({ success: true, message: 'If this email exists, a reset link has been sent.' });
@@ -192,8 +194,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
   await sendEmailSafe({
     to: user.email,
-    subject: 'WeDeen password reset successful',
-    text: 'Your WeDeen password has been reset successfully.'
+    subject: 'Muslim Deen: Quran & Prayer password reset successful',
+    text: 'Your Muslim Deen: Quran & Prayer password has been reset successfully.'
   }, 'resetPassword');
 
   res.json({ success: true });

@@ -1,7 +1,16 @@
 import crypto from 'crypto';
 import mongoose from 'mongoose';
+import { Achievement } from '../../src/models/Achievement.js';
+import { DuaProgress } from '../../src/models/DuaProgress.js';
+import { FastingLog } from '../../src/models/FastingLog.js';
+import { Favorite } from '../../src/models/Favorite.js';
 import { User } from '../../src/models/User.js';
 import { Memorization } from '../../src/models/Memorization.js';
+import { PlaceFavorite } from '../../src/models/PlaceFavorite.js';
+import { Reflection } from '../../src/models/Reflection.js';
+import { SalahLog } from '../../src/models/SalahLog.js';
+import { Tasbih } from '../../src/models/Tasbih.js';
+import { ZakatCalculation } from '../../src/models/ZakatCalculation.js';
 
 let dbReadyPromise;
 
@@ -87,7 +96,18 @@ export default async function handler(req, res) {
   const user = await User.findOne({ email: normalizedEmail }).select('_id').lean();
 
   if (user?._id) {
-    await Memorization.deleteMany({ userId: user._id });
+    await Promise.all([
+      Memorization.deleteMany({ userId: user._id }),
+      SalahLog.deleteMany({ userId: user._id }),
+      Tasbih.deleteMany({ userId: user._id }),
+      Achievement.deleteMany({ userId: user._id }),
+      Favorite.deleteMany({ userId: user._id }),
+      ZakatCalculation.deleteMany({ userId: user._id }),
+      FastingLog.deleteMany({ userId: user._id }),
+      PlaceFavorite.deleteMany({ userId: user._id }),
+      DuaProgress.deleteMany({ userId: user._id }),
+      Reflection.deleteMany({ userId: user._id }),
+    ]);
     await User.deleteOne({ _id: user._id });
   }
 

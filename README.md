@@ -1,6 +1,6 @@
 # Private Property Notice
 
-This `backend` codebase is private and proprietary property of the WeDeen project owner.
+This `backend` codebase is private and proprietary property of the Muslim Deen: Quran & Prayer project owner.
 
 ## Restrictions
 - No unauthorized copying, sharing, publishing, or redistribution.

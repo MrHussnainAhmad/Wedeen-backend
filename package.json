@@ -1,7 +1,7 @@
 {
   "name": "wedeen-backend",
   "version": "1.0.0",
-  "description": "WeDeen backend API",
+  "description": "Muslim Deen: Quran & Prayer backend API",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

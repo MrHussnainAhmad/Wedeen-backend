@@ -15,7 +15,9 @@ import {
   syncPlaceFavorites,
   getPlaceFavorites,
   syncDuas,
-  getDuas
+  getDuas,
+  syncReflections,
+  getReflections
 } from '../controllers/syncController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -48,5 +50,9 @@ router.post('/place-favorites', syncPlaceFavorites);
 router.get('/place-favorites', getPlaceFavorites);
 router.post('/duas', syncDuas);
 router.get('/duas', getDuas);
+
+// Daily reflections routes
+router.post('/reflections', syncReflections);
+router.get('/reflections', getReflections);
 
 export default router;

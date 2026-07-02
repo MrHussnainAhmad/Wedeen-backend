@@ -6,6 +6,7 @@ import { ZakatCalculation } from '../models/ZakatCalculation.js';
 import { FastingLog } from '../models/FastingLog.js';
 import { PlaceFavorite } from '../models/PlaceFavorite.js';
 import { DuaProgress } from '../models/DuaProgress.js';
+import { Reflection } from '../models/Reflection.js';
 
 // --- Salah Logs Sync ---
 export async function syncSalah(req, res, next) {
@@ -437,6 +438,74 @@ export async function getDuas(req, res, next) {
         readCount: item.readCount,
         favorite: item.favorite,
         lastReadAt: item.lastReadAt?.getTime?.() ?? null,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// --- Daily Reflections Sync ---
+export async function syncReflections(req, res, next) {
+  try {
+    const { items } = req.body;
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ message: 'items must be an array' });
+    }
+
+    const userId = req.user.id;
+    const validItems = items
+      .filter((item) => item?.id && typeof item.text === 'string')
+      .map((item) => ({
+        reflectionId: String(item.id),
+        date:
+          typeof item.date === 'string' && item.date
+            ? item.date
+            : new Date().toISOString().split('T')[0],
+        text: item.text.slice(0, 5000),
+        createdAtClient: item.createdAt ? new Date(item.createdAt) : new Date(),
+      }))
+      .filter((item) => item.text.trim().length > 0);
+
+    const reflectionIds = validItems.map((item) => item.reflectionId);
+
+    await Reflection.deleteMany({
+      userId,
+      reflectionId: { $nin: reflectionIds },
+    });
+
+    for (const item of validItems) {
+      await Reflection.updateOne(
+        { userId, reflectionId: item.reflectionId },
+        {
+          $set: {
+            date: item.date,
+            text: item.text,
+            createdAtClient: item.createdAtClient,
+          },
+        },
+        { upsert: true }
+      );
+    }
+
+    return res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getReflections(req, res, next) {
+  try {
+    const items = await Reflection.find({ userId: req.user.id })
+      .sort({ createdAtClient: -1 })
+      .lean();
+
+    return res.json({
+      items: items.map((item) => ({
+        id: item.reflectionId,
+        date: item.date,
+        text: item.text,
+        createdAt: item.createdAtClient?.getTime?.() ?? Date.now(),
       })),
     });
   } catch (err) {

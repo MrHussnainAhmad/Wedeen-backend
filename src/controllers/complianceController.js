@@ -5,6 +5,7 @@ import { FastingLog } from '../models/FastingLog.js';
 import { Favorite } from '../models/Favorite.js';
 import { Memorization } from '../models/Memorization.js';
 import { PlaceFavorite } from '../models/PlaceFavorite.js';
+import { Reflection } from '../models/Reflection.js';
 import { SalahLog } from '../models/SalahLog.js';
 import { Tasbih } from '../models/Tasbih.js';
 import { User } from '../models/User.js';
@@ -70,6 +71,7 @@ export const deleteAccountCompliance = asyncHandler(async (req, res) => {
       FastingLog.deleteMany({ userId: user._id }),
       PlaceFavorite.deleteMany({ userId: user._id }),
       DuaProgress.deleteMany({ userId: user._id }),
+      Reflection.deleteMany({ userId: user._id }),
     ]);
     await User.deleteOne({ _id: user._id });
   }
