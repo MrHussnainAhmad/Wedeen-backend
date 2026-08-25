@@ -13,6 +13,7 @@ export const env = {
   port: Number(process.env.PORT) || 5000,
   mongoUri: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
+  cronSecret: process.env.CRON_SECRET || '',
   accountDeletionServiceToken: process.env.ACCOUNT_DELETION_SERVICE_TOKEN || '',
   corsOrigin: process.env.CORS_ORIGIN || '*',
   nodeEnv: process.env.NODE_ENV || 'development',
